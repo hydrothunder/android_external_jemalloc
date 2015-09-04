@@ -26,7 +26,7 @@ get_max_size_class(void)
 TEST_BEGIN(test_size_classes)
 {
 	size_t size_class, max_size_class;
-	szind_t index, max_index;
+	index_t index, max_index;
 
 	max_size_class = get_max_size_class();
 	max_index = size2index(max_size_class);
