@@ -659,13 +659,12 @@ arena_mapbits_size_decode(size_t mapbits)
 {
 	size_t size;
 
-#if CHUNK_MAP_SIZE_SHIFT > 0
-	size = (mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT;
-#elif CHUNK_MAP_SIZE_SHIFT == 0
-	size = mapbits & CHUNK_MAP_SIZE_MASK;
-#else
-	size = (mapbits & CHUNK_MAP_SIZE_MASK) << -CHUNK_MAP_SIZE_SHIFT;
-#endif
+	if (CHUNK_MAP_SIZE_SHIFT > 0)
+		size = (mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT;
+	else if (CHUNK_MAP_SIZE_SHIFT == 0)
+		size = mapbits & CHUNK_MAP_SIZE_MASK;
+	else
+		size = (mapbits & CHUNK_MAP_SIZE_MASK) << -CHUNK_MAP_SIZE_SHIFT;
 
 	return (size);
 }
@@ -777,13 +776,12 @@ arena_mapbits_size_encode(size_t size)
 {
 	size_t mapbits;
 
-#if CHUNK_MAP_SIZE_SHIFT > 0
-	mapbits = size << CHUNK_MAP_SIZE_SHIFT;
-#elif CHUNK_MAP_SIZE_SHIFT == 0
-	mapbits = size;
-#else
-	mapbits = size >> -CHUNK_MAP_SIZE_SHIFT;
-#endif
+	if (CHUNK_MAP_SIZE_SHIFT > 0)
+		mapbits = size << CHUNK_MAP_SIZE_SHIFT;
+	else if (CHUNK_MAP_SIZE_SHIFT == 0)
+		mapbits = size;
+	else
+		mapbits = size >> -CHUNK_MAP_SIZE_SHIFT;
 
 	assert((mapbits & ~CHUNK_MAP_SIZE_MASK) == 0);
 	return (mapbits);
