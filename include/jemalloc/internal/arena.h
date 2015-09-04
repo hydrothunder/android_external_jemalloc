@@ -34,6 +34,10 @@ typedef struct arena_s arena_t;
 
 #endif /* JEMALLOC_H_TYPES */
 /******************************************************************************/
+#ifndef index_t
+#define index_t size_t
+#endif
+
 #ifdef JEMALLOC_H_STRUCTS
 
 #ifdef JEMALLOC_ARENA_STRUCTS_A
