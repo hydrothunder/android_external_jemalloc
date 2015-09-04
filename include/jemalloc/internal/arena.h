@@ -519,7 +519,6 @@ arena_chunk_map_misc_t	*arena_run_to_miscelm(arena_run_t *run);
 size_t	*arena_mapbitsp_get(arena_chunk_t *chunk, size_t pageind);
 size_t	arena_mapbitsp_read(size_t *mapbitsp);
 size_t	arena_mapbits_get(arena_chunk_t *chunk, size_t pageind);
-size_t	arena_mapbits_size_decode(size_t mapbits);
 size_t	arena_mapbits_unallocated_size_get(arena_chunk_t *chunk,
     size_t pageind);
 size_t	arena_mapbits_large_size_get(arena_chunk_t *chunk, size_t pageind);
@@ -531,7 +530,6 @@ size_t	arena_mapbits_decommitted_get(arena_chunk_t *chunk, size_t pageind);
 size_t	arena_mapbits_large_get(arena_chunk_t *chunk, size_t pageind);
 size_t	arena_mapbits_allocated_get(arena_chunk_t *chunk, size_t pageind);
 void	arena_mapbitsp_write(size_t *mapbitsp, size_t mapbits);
-size_t	arena_mapbits_size_encode(size_t size);
 void	arena_mapbits_unallocated_set(arena_chunk_t *chunk, size_t pageind,
     size_t size, size_t flags);
 void	arena_mapbits_unallocated_size_set(arena_chunk_t *chunk, size_t pageind,
@@ -655,28 +653,13 @@ arena_mapbits_get(arena_chunk_t *chunk, size_t pageind)
 }
 
 JEMALLOC_ALWAYS_INLINE size_t
-arena_mapbits_size_decode(size_t mapbits)
-{
-	size_t size;
-
-	if (CHUNK_MAP_SIZE_SHIFT > 0)
-		size = (mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT;
-	else if (CHUNK_MAP_SIZE_SHIFT == 0)
-		size = mapbits & CHUNK_MAP_SIZE_MASK;
-	else
-		size = (mapbits & CHUNK_MAP_SIZE_MASK) << -CHUNK_MAP_SIZE_SHIFT;
-
-	return (size);
-}
-
-JEMALLOC_ALWAYS_INLINE size_t
 arena_mapbits_unallocated_size_get(arena_chunk_t *chunk, size_t pageind)
 {
 	size_t mapbits;
 
 	mapbits = arena_mapbits_get(chunk, pageind);
 	assert((mapbits & (CHUNK_MAP_LARGE|CHUNK_MAP_ALLOCATED)) == 0);
-	return (arena_mapbits_size_decode(mapbits));
+	return ((mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT);
 }
 
 JEMALLOC_ALWAYS_INLINE size_t
@@ -687,7 +670,7 @@ arena_mapbits_large_size_get(arena_chunk_t *chunk, size_t pageind)
 	mapbits = arena_mapbits_get(chunk, pageind);
 	assert((mapbits & (CHUNK_MAP_LARGE|CHUNK_MAP_ALLOCATED)) ==
 	    (CHUNK_MAP_LARGE|CHUNK_MAP_ALLOCATED));
-	return (arena_mapbits_size_decode(mapbits));
+	return ((mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT);
 }
 
 JEMALLOC_ALWAYS_INLINE size_t
@@ -771,22 +754,6 @@ arena_mapbitsp_write(size_t *mapbitsp, size_t mapbits)
 	*mapbitsp = mapbits;
 }
 
-JEMALLOC_ALWAYS_INLINE size_t
-arena_mapbits_size_encode(size_t size)
-{
-	size_t mapbits;
-
-	if (CHUNK_MAP_SIZE_SHIFT > 0)
-		mapbits = size << CHUNK_MAP_SIZE_SHIFT;
-	else if (CHUNK_MAP_SIZE_SHIFT == 0)
-		mapbits = size;
-	else
-		mapbits = size >> -CHUNK_MAP_SIZE_SHIFT;
-
-	assert((mapbits & ~CHUNK_MAP_SIZE_MASK) == 0);
-	return (mapbits);
-}
-
 JEMALLOC_ALWAYS_INLINE void
 arena_mapbits_unallocated_set(arena_chunk_t *chunk, size_t pageind, size_t size,
     size_t flags)
@@ -794,10 +761,11 @@ arena_mapbits_unallocated_set(arena_chunk_t *chunk, size_t pageind, size_t size,
 	size_t *mapbitsp = arena_mapbitsp_get(chunk, pageind);
 
 	assert((size & PAGE_MASK) == 0);
+	assert(((size << CHUNK_MAP_SIZE_SHIFT) & ~CHUNK_MAP_SIZE_MASK) == 0);
 	assert((flags & CHUNK_MAP_FLAGS_MASK) == flags);
 	assert((flags & CHUNK_MAP_DECOMMITTED) == 0 || (flags &
 	    (CHUNK_MAP_DIRTY|CHUNK_MAP_UNZEROED)) == 0);
-	arena_mapbitsp_write(mapbitsp, arena_mapbits_size_encode(size) |
+	arena_mapbitsp_write(mapbitsp, (size << CHUNK_MAP_SIZE_SHIFT) |
 	    CHUNK_MAP_BININD_INVALID | flags);
 }
 
@@ -809,9 +777,10 @@ arena_mapbits_unallocated_size_set(arena_chunk_t *chunk, size_t pageind,
 	size_t mapbits = arena_mapbitsp_read(mapbitsp);
 
 	assert((size & PAGE_MASK) == 0);
+	assert(((size << CHUNK_MAP_SIZE_SHIFT) & ~CHUNK_MAP_SIZE_MASK) == 0);
 	assert((mapbits & (CHUNK_MAP_LARGE|CHUNK_MAP_ALLOCATED)) == 0);
-	arena_mapbitsp_write(mapbitsp, arena_mapbits_size_encode(size) |
-	    (mapbits & ~CHUNK_MAP_SIZE_MASK));
+	arena_mapbitsp_write(mapbitsp, (size << CHUNK_MAP_SIZE_SHIFT) | (mapbits
+	    & ~CHUNK_MAP_SIZE_MASK));
 }
 
 JEMALLOC_ALWAYS_INLINE void
@@ -830,10 +799,11 @@ arena_mapbits_large_set(arena_chunk_t *chunk, size_t pageind, size_t size,
 	size_t *mapbitsp = arena_mapbitsp_get(chunk, pageind);
 
 	assert((size & PAGE_MASK) == 0);
+	assert(((size << CHUNK_MAP_SIZE_SHIFT) & ~CHUNK_MAP_SIZE_MASK) == 0);
 	assert((flags & CHUNK_MAP_FLAGS_MASK) == flags);
 	assert((flags & CHUNK_MAP_DECOMMITTED) == 0 || (flags &
 	    (CHUNK_MAP_DIRTY|CHUNK_MAP_UNZEROED)) == 0);
-	arena_mapbitsp_write(mapbitsp, arena_mapbits_size_encode(size) |
+	arena_mapbitsp_write(mapbitsp, (size << CHUNK_MAP_SIZE_SHIFT) |
 	    CHUNK_MAP_BININD_INVALID | flags | CHUNK_MAP_LARGE |
 	    CHUNK_MAP_ALLOCATED);
 }

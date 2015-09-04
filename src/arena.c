@@ -39,7 +39,7 @@ JEMALLOC_INLINE_C arena_chunk_map_misc_t *
 arena_miscelm_key_create(size_t size)
 {
 
-	return ((arena_chunk_map_misc_t *)(arena_mapbits_size_encode(size) |
+	return ((arena_chunk_map_misc_t *)((size << CHUNK_MAP_SIZE_SHIFT) |
 	    CHUNK_MAP_KEY));
 }
 
@@ -58,7 +58,8 @@ arena_miscelm_key_size_get(const arena_chunk_map_misc_t *miscelm)
 
 	assert(arena_miscelm_is_key(miscelm));
 
-	return (arena_mapbits_size_decode((uintptr_t)miscelm));
+	return (((uintptr_t)miscelm & CHUNK_MAP_SIZE_MASK) >>
+	    CHUNK_MAP_SIZE_SHIFT);
 }
 
 JEMALLOC_INLINE_C size_t
@@ -72,7 +73,7 @@ arena_miscelm_size_get(arena_chunk_map_misc_t *miscelm)
 	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(miscelm);
 	pageind = arena_miscelm_to_pageind(miscelm);
 	mapbits = arena_mapbits_get(chunk, pageind);
-	return (arena_mapbits_size_decode(mapbits));
+	return ((mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT);
 }
 
 JEMALLOC_INLINE_C int
