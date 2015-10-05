@@ -232,7 +232,7 @@ typedef unsigned szind_t;
 #  ifdef __alpha__
 #    define LG_QUANTUM		4
 #  endif
-#  ifdef __sparc64__
+#  if (defined(__sparc64__) || defined(__sparcv9))
 #    define LG_QUANTUM		4
 #  endif
 #  if (defined(__amd64__) || defined(__x86_64__) || defined(_M_X64))
@@ -705,7 +705,7 @@ sa2u(size_t size, size_t alignment)
 	}
 
 	/* Try for a large size class. */
-	if (likely(size <= arena_maxclass) && likely(alignment < chunksize)) {
+	if (likely(size <= large_maxclass) && likely(alignment < chunksize)) {
 		/*
 		 * We can't achieve subpage alignment, so round up alignment
 		 * to the minimum that can actually be supported.
@@ -1096,7 +1096,7 @@ iralloct(tsd_t *tsd, void *ptr, size_t oldsize, size_t size, size_t alignment,
 		    zero, tcache, arena));
 	}
 
-	return (arena_ralloc(tsd, arena, ptr, oldsize, size, 0, alignment, zero,
+	return (arena_ralloc(tsd, arena, ptr, oldsize, size, alignment, zero,
 	    tcache));
 }
 
