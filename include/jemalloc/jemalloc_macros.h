@@ -4,10 +4,10 @@
 #include <limits.h>
 #include <strings.h>
 
-#define	JEMALLOC_VERSION "4.0.3-0-arter97"
+#define	JEMALLOC_VERSION "4.0.4-0-arter97"
 #define	JEMALLOC_VERSION_MAJOR 4
 #define	JEMALLOC_VERSION_MINOR 0
-#define	JEMALLOC_VERSION_BUGFIX 3
+#define	JEMALLOC_VERSION_BUGFIX 4
 #define	JEMALLOC_VERSION_NREV 0
 #define	JEMALLOC_VERSION_GID "arter97"
 
