@@ -17,9 +17,13 @@
 UNIT_TEST_DIR="jemalloc_unittests"
 
 UNIT_TESTS=( \
+  "a0" \
+  "arena_reset" \
   "atomic" \
   "bitmap" \
   "ckh" \
+  "decay" \
+  "fork" \
   "hash" \
   "junk" \
   "junk_alloc" \
@@ -29,6 +33,8 @@ UNIT_TESTS=( \
   "math" \
   "mq" \
   "mtx" \
+  "nstime" \
+  "prng" \
   "prof_accum" \
   "prof_active" \
   "prof_gdump" \
@@ -40,11 +46,15 @@ UNIT_TESTS=( \
   "quarantine" \
   "rb" \
   "rtree" \
+  "run_quantize" \
   "SFMT" \
   "size_classes" \
+  "smoothstep" \
   "stats" \
+  "ticker" \
   "tsd" \
   "util" \
+  "witness" \
   "zero" \
 )
 
