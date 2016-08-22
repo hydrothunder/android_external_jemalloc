@@ -17,6 +17,8 @@
 LOCAL_PATH := $(call my-dir)
 
 jemalloc_common_cflags := \
+        -O3 \
+        -funroll-loops \
 	-std=gnu99 \
 	-D_REENTRANT \
 	-fvisibility=hidden \
@@ -42,7 +44,6 @@ jemalloc_common_cflags := \
 #     1 << XX is the default chunk size used by the system. Decreasing this
 #     usually decreases the amount of PSS used, but can increase
 #     fragmentation.
-
 # Default to a single arena for svelte configurations to minimize
 # PSS consumed by jemalloc.
 jemalloc_common_cflags += \
@@ -52,11 +53,11 @@ jemalloc_common_cflags += \
 # Only enable the tcache on non-svelte configurations, to save PSS.
 ifneq ($(MALLOC_SVELTE),true)
 jemalloc_common_cflags += \
-	-UANDROID_MAX_ARENAS \
-	-DANDROID_MAX_ARENAS=2 \
+        -UANDROID_MAX_ARENAS \
+        -DANDROID_MAX_ARENAS=2 \
 	-DJEMALLOC_TCACHE \
-	-DANDROID_TCACHE_NSLOTS_SMALL_MAX=8 \
-	-DANDROID_TCACHE_NSLOTS_LARGE=16
+        -DANDROID_TCACHE_NSLOTS_SMALL_MAX=8 \
+        -DANDROID_TCACHE_NSLOTS_LARGE=16
 endif
 
 # Use a 512K chunk size on 32 bit systems.
